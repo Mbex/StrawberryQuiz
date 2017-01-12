@@ -61,13 +61,20 @@ text-align: left;
 /* CLASS RULES */
 /*************************************************/
 
-
-
 .answers{
 	font-size: 32;
 	margin: 5%;
 	padding: 2%;
 	text-align: center;
+}
+
+.overlay {
+    background-color: rgba(1, 1, 1, 0);
+    bottom: 0;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
 }
 
 /*************************************************/

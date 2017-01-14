@@ -1,9 +1,15 @@
 //GLOBALS
-var SCORE = 0;
+SCORE = 0;
 QUESTION_OBJECT = {};
-var CLICKS = 0;
+QNUM = 0;
 
 // FUNCTIONS
+function restartResetSCORE(){
+  document.getElementById("Restart").addEventListener("click", function () {
+    SCORE = 0;
+  });
+}
+
 function loadJSON(filename) {
 
     return new Promise( function(resolve, reject) {
@@ -26,6 +32,7 @@ function getCorrectAnswer(question_object, qIndex) {
   return new Promise( function (resolve, reject){
 
     var Ans = question_object[qIndex].Answers;
+
     Object.keys(Ans).forEach(function(option){
 
       if (Ans[option].Points == 1){
@@ -37,28 +44,33 @@ function getCorrectAnswer(question_object, qIndex) {
 
 function populateQAdivs(question_object, qIndex, correctAns, allAns) {
 
-  // Populate Question div
-  document.getElementById("question").innerHTML = question_object[qIndex].Question;
+  return new Promise(function(resolve, reject){
 
-  // Populate Answer div
-  var answer_list = document.getElementById("ulist");
-  Object.keys(question_object[qIndex].Answers).forEach(function(option){
+    // Populate Question div
+    document.getElementById("question").innerHTML = question_object[qIndex].Question;
 
-    var info = question_object[qIndex].Answers[option];
-    var li = document.createElement('li');
-    li.setAttribute("id", option);
-    li.innerHTML = '<span>'+info.Answer+'</span>';
+    // Populate Answer div
+    Object.keys(question_object[qIndex].Answers).forEach(function(option){
 
-    li = evtButtonClick(li, correctAns, allAns, question_object, qIndex);
+      var li = document.createElement('li');
+      li.setAttribute("id", option);
+      li.innerHTML = '<span>'+question_object[qIndex].Answers[option].Answer+'</span>';
+      document.getElementById("ulist").appendChild(li);
 
-    answer_list.appendChild(li);
-
+      resolve(null);
+    });
   });
 }
 
-function evtButtonClick(li, correctAns, allAns, question_object, qIndex) {
+function evtButtonClick(ans, correctAns, allAns, question_object, qs, QNUM) {
 
-  li.addEventListener("click", function () {
+  document.getElementById(ans).addEventListener("click", function () {
+
+    // Make rest of screen unresponsive
+     var overlay = document.createElement("div");
+     overlay.className = "overlay";
+     var wrapper = document.getElementById('wrapper');
+     wrapper.appendChild(overlay);
 
     // Grey out other options
     allAns.forEach( function(ea) {
@@ -74,55 +86,55 @@ function evtButtonClick(li, correctAns, allAns, question_object, qIndex) {
       document.getElementById(correctAns).style.backgroundColor = "green";
     };
 
-    // Make rest of screen unresponsive
-    var overlay = document.createElement("div");
-    overlay.className = "overlay";
-    var wrapper = document.getElementById('wrapper');
-    wrapper.appendChild(overlay);
+    // show score
+    console.log("SCORE: ", SCORE);
 
-    // Get rid of contents
+    // delayed functionality
     window.setTimeout(function () {
+      // Get rid of contents
       document.getElementById("question").innerHTML = "";
       document.getElementById("ulist").innerHTML = "";
-      loadQuestion(question_object, qIndex);  !!!!!!!!!!!!!!!!!!!!
+      // Remove overlay (blank div)
+      overlay.remove()
+
+      // increment and load next question
+      QNUM++;
+      if( QNUM < qs.length){loadQuestion(question_object, qs, QNUM)}
+
     }, 3000);
 
-    // move question on
-    q = qs + 1 !!!!!!!!!!!!!!!!!!!!
-
-    // Remove overlay (blank div)
-    overlay.remove()
-
-   console.log("SCORE: ", SCORE);
   });
-
-  return li;
 
 };
 
-function loadQuestion(QUESTION_OBJECT, q) {
-  getCorrectAnswer(QUESTION_OBJECT, q).then(function(correctAns){
-    var allAns = Object.keys(QUESTION_OBJECT[q].Answers);
-    populateQAdivs(QUESTION_OBJECT, q, correctAns, allAns);
-  });
-};
+var loadQuestion = function(question_object, qs, QNUM){
 
+  var q = qs[QNUM];
+  getCorrectAnswer(question_object, q).then(function(correctAns){
+
+    var allAns = Object.keys(question_object[q].Answers);
+    populateQAdivs(question_object, q, correctAns, allAns).then( function() {
+
+      allAns.forEach(function(ans){
+        evtButtonClick(ans, correctAns, allAns, question_object, qs, QNUM);
+      });
+    });
+  });
+}
 
 // MAIN
-loadJSON("questions.json").then(function(QUESTION_OBJECT){
 
-  var i = 0;
-  var qs = Object.keys(QUESTION_OBJECT);
-  var q = qs[i];
+var fname = document.URL.substr(document.URL.lastIndexOf('/')+1);
+if (fname == "question.html") {
 
-  loadQuestion(QUESTION_OBJECT, q);
+  restartResetSCORE();
+  loadJSON("questions.json").then(function(QUESTION_OBJECT){
 
-});
+    var qs = Object.keys(QUESTION_OBJECT);
 
+    loadQuestion(QUESTION_OBJECT, qs, QNUM);
 
-// Add event listener to:
-//    grey out buttons
-//    repopulate div
-
+  });
+};
 
 // restart has to reset score

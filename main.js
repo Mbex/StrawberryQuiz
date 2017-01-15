@@ -1,15 +1,11 @@
 //GLOBALS
+PATH = document.URL.substr(0, document.URL.lastIndexOf('/')+1)
+FNAME = document.URL.substr(document.URL.lastIndexOf('/')+1);
 SCORE = 0;
-QUESTION_OBJECT = {};
 QNUM = 0;
+PAUSE = 1; // seconds
 
 // FUNCTIONS
-function restartResetSCORE(){
-  document.getElementById("Restart").addEventListener("click", function () {
-    SCORE = 0;
-  });
-}
-
 function loadJSON(filename) {
 
     return new Promise( function(resolve, reject) {
@@ -47,14 +43,22 @@ function populateQAdivs(question_object, qIndex, correctAns, allAns) {
   return new Promise(function(resolve, reject){
 
     // Populate Question div
-    document.getElementById("question").innerHTML = question_object[qIndex].Question;
+    document.getElementById("question").innerHTML = qIndex +". " + question_object[qIndex].Question;
 
     // Populate Answer div
     Object.keys(question_object[qIndex].Answers).forEach(function(option){
 
       var li = document.createElement('li');
       li.setAttribute("id", option);
-      li.innerHTML = '<span>'+question_object[qIndex].Answers[option].Answer+'</span>';
+      var a = document.createElement('a');
+      a.innerText = question_object[qIndex].Answers[option].Answer;
+      li.appendChild(a)
+
+      // if (QNUM == Object.keys(question_object).length-1){
+      //   console.log("last q");
+      //   a.setAttribute("href", PATH+"endpage.html");
+      // };
+
       document.getElementById("ulist").appendChild(li);
 
       resolve(null);
@@ -62,11 +66,43 @@ function populateQAdivs(question_object, qIndex, correctAns, allAns) {
   });
 }
 
+function splashScore(score, question_object){
+
+  loadJSON("scores.json").then( function(score_data) {
+
+    // which key in JSON element to use
+    var index;
+    if( score < 5) {
+      index = "low";
+    } else if (score > 4 & score < 8) {
+      index = "mid-low";
+    } else if (score > 8 & score < 10) {
+      index = "mid-high";
+    } else {
+      index = "high";
+    }
+
+    var final_score = document.createElement("h1");
+    var title = document.createElement("h2");
+    var comment = document.createElement("p");
+    var img = document.createElement("img");
+
+    final_score.innerText = score + " / " + Object.keys(question_object).length;
+    title.innerText = score_data[index].title
+    comment.innerText = score_data[index].comment;
+
+    document.getElementById("section").appendChild(title);
+    document.getElementById("section").appendChild(final_score);
+    document.getElementById("section").appendChild(comment);
+
+  });
+}
+
 function evtButtonClick(ans, correctAns, allAns, question_object, qs, QNUM) {
 
   document.getElementById(ans).addEventListener("click", function () {
 
-    // Make rest of screen unresponsive
+    // Make screen unresponsive
      var overlay = document.createElement("div");
      overlay.className = "overlay";
      var wrapper = document.getElementById('wrapper');
@@ -86,23 +122,27 @@ function evtButtonClick(ans, correctAns, allAns, question_object, qs, QNUM) {
       document.getElementById(correctAns).style.backgroundColor = "green";
     };
 
-    // show score
-    console.log("SCORE: ", SCORE);
-
-    // delayed functionality
+    // Some Delayed functionality
     window.setTimeout(function () {
-      // Get rid of contents
+
+      // Get rid of Q&A contents
       document.getElementById("question").innerHTML = "";
       document.getElementById("ulist").innerHTML = "";
+
       // Remove overlay (blank div)
       overlay.remove()
 
-      // increment and load next question
+      // Increment and load next question or go to endpage
       QNUM++;
-      if( QNUM < qs.length){loadQuestion(question_object, qs, QNUM)}
+      if( QNUM < qs.length){
+        loadQuestion(question_object, qs, QNUM);
+      } else {
+        splashScore(SCORE, question_object);
+      }
 
-    }, 3000);
+    }, PAUSE * 1000);
 
+  console.log("SCORE:", SCORE);
   });
 
 };
@@ -122,19 +162,16 @@ var loadQuestion = function(question_object, qs, QNUM){
   });
 }
 
+
+
+//------------------------------------------------------------------------------
 // MAIN
+//------------------------------------------------------------------------------
 
-var fname = document.URL.substr(document.URL.lastIndexOf('/')+1);
-if (fname == "question.html") {
-
-  restartResetSCORE();
-  loadJSON("questions.json").then(function(QUESTION_OBJECT){
-
-    var qs = Object.keys(QUESTION_OBJECT);
-
-    loadQuestion(QUESTION_OBJECT, qs, QNUM);
-
+// Load Quiz
+if (FNAME == "quiz.html") {
+  loadJSON("questions.json").then(function(question_object){
+    var qs = Object.keys(question_object);
+    loadQuestion(question_object, qs, QNUM);
   });
 };
-
-// restart has to reset score

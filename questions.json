@@ -95,7 +95,7 @@
         "Points" : 0
       },
       "C" : {
-        "Answer" : "He hasn't got a stich to wear",
+        "Answer" : "He hasn't got a stitch to wear",
         "Points" : 1
       },
       "D" : {
@@ -209,5 +209,4 @@
       }
     }
   }
-
 }]

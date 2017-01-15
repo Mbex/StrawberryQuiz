@@ -3,7 +3,7 @@ PATH = document.URL.substr(0, document.URL.lastIndexOf('/')+1)
 FNAME = document.URL.substr(document.URL.lastIndexOf('/')+1);
 SCORE = 0;
 QNUM = 0;
-PAUSE = 1; // seconds
+PAUSE = 2; // seconds
 
 // FUNCTIONS
 function loadJSON(filename) {
@@ -88,17 +88,27 @@ function splashScore(score, question_object){
     var img = document.createElement("img");
 
     final_score.innerText = score + " / " + Object.keys(question_object).length;
-    title.innerText = score_data[index].title
+    title.innerText = score_data[index].title;
     comment.innerText = score_data[index].comment;
+    img.src = score_data[index].img;
 
     document.getElementById("section").appendChild(title);
     document.getElementById("section").appendChild(final_score);
     document.getElementById("section").appendChild(comment);
+    document.getElementById("section").appendChild(img);
 
+    window.setTimeout(function () {
+      window.location.href = "index.html";
+    }, 1000 * 2 * 60);
   });
+
 }
 
 function evtButtonClick(ans, correctAns, allAns, question_object, qs, QNUM) {
+
+  var color_correct = "rgb(0, 153, 51)";
+  var color_incorrect = "rgb(30, 30, 30)";
+  var color_blank = "rgb(70, 70, 70)";
 
   document.getElementById(ans).addEventListener("click", function () {
 
@@ -110,16 +120,16 @@ function evtButtonClick(ans, correctAns, allAns, question_object, qs, QNUM) {
 
     // Grey out other options
     allAns.forEach( function(ea) {
-      document.getElementById(ea).style.backgroundColor = "grey";
+      document.getElementById(ea).style.backgroundColor = color_blank;
     });
 
     // Change colour of div based on correct answer
     if (this.id == correctAns){
-      this.style.backgroundColor = "green";
+      this.style.backgroundColor = color_correct;
       SCORE += 1;
     } else {
-      this.style.backgroundColor = "red";
-      document.getElementById(correctAns).style.backgroundColor = "green";
+      this.style.backgroundColor = color_incorrect;
+      document.getElementById(correctAns).style.backgroundColor = color_correct;
     };
 
     // Some Delayed functionality
@@ -161,7 +171,6 @@ var loadQuestion = function(question_object, qs, QNUM){
     });
   });
 }
-
 
 
 //------------------------------------------------------------------------------
